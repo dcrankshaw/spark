@@ -126,43 +126,34 @@ object Analytics extends Logging {
         println("Components: " + cc.vertices.map{ case (vid,data) => data}.distinct())
         sc.stop()
 
-//       case "kcore" =>
-//         var numEPart = 4
-//         var kmax = 4
-//         var kmin = 1
-//         var partitionStrategy: Option[PartitionStrategy] = None
-//
-//         options.foreach{
-//           case ("numEPart", v) => numEPart = v.toInt
-//           case ("kmax", v) => kmax = v.toInt
-//           case ("kmin", v) => kmin = v.toInt
-//           case ("partStrategy", v) => partitionStrategy = Some(pickPartitioner(v))
-//           case (opt, _) => throw new IllegalArgumentException("Invalid option: " + opt)
-//         }
-//
-//         if (kmax < 1) {
-//           logWarning("kmax must be positive")
-//           sys.exit(1)
-//         }
-//         if (kmax < kmin) {
-//           logWarning("kmax must be greater than or equal to kmin")
-//           sys.exit(1)
-//         }
-//         
-//         println("======================================")
-//         println("|               KCORE                 |")
-//         println("======================================")
-//
-//         val sc = new SparkContext(host, "KCore(" + fname + ")", conf)
-//         val unpartitionedGraph = GraphLoader.edgeListFile(sc, fname,
-//           minEdgePartitions = numEPart).cache()
-//         val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
-//
-//         logWarning("Starting kcore")
-//         // val result = KCore.run(graph, kmax, kmin)
-//
-//         logWarning("Size of cores: " + result.vertices.map { case (vid,data) => (min(data, kmax), 1) }.reduceByKey((_+_)).collect().mkString(", "))
-//         sc.stop()
+      case "kcore" =>
+        var numEPart = 4
+        var kmax = 3
+        var partitionStrategy: Option[PartitionStrategy] = None
+
+        options.foreach{
+          case ("numEPart", v) => numEPart = v.toInt
+          case ("kmax", v) => kmax = v.toInt
+          case ("partStrategy", v) => partitionStrategy = Some(pickPartitioner(v))
+          case (opt, _) => throw new IllegalArgumentException("Invalid option: " + opt)
+        }
+
+        if (kmax < 1) {
+          logWarning("kmax must be positive")
+          sys.exit(1)
+        }
+        println("======================================")
+        println("|               KCORE                 |")
+        println("======================================")
+
+        val sc = new SparkContext(host, "KCore(" + fname + ")", conf)
+        val unpartitionedGraph = GraphLoader.edgeListFile(sc, fname,
+          minEdgePartitions = numEPart).cache()
+        val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
+
+        val result = KCore.run(graph, kmax)
+        println("Size of cores: " + result.vertices.map{ case (vid,data) => (data, 1)}.reduceByKey((_+_)).collect().mkString(", "))
+        sc.stop()
 
       case "triangles" =>
         var numEPart = 4
