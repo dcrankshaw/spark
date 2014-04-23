@@ -56,13 +56,15 @@ object Analytics extends Logging {
 
     taskType match {
       case "pagerank" =>
-        var tol: Float = 0.001F
+        // var tol: Float = 0.001F
+        var numIters: Int = 10
         var outFname = ""
         var numEPart = 4
         var partitionStrategy: Option[PartitionStrategy] = None
 
         options.foreach{
-          case ("tol", v) => tol = v.toFloat
+          // case ("tol", v) => tol = v.toFloat
+          case ("numIters", v) => numIters = v.toInt
           case ("output", v) => outFname = v
           case ("numEPart", v) => numEPart = v.toInt
           case ("partStrategy", v) => partitionStrategy = Some(pickPartitioner(v))
@@ -82,7 +84,7 @@ object Analytics extends Logging {
         println("GRAPHX: Number of vertices " + graph.vertices.count)
         println("GRAPHX: Number of edges " + graph.edges.count)
 
-        val pr = graph.pageRank(tol).vertices.cache()
+        val pr = graph.staticPageRank(numIters).vertices.cache()
 
         println("GRAPHX: Total rank: " + pr.map(_._2).reduce(_ + _))
 
@@ -118,9 +120,13 @@ object Analytics extends Logging {
         println("======================================")
 
         val sc = new SparkContext(host, "ConnectedComponents(" + fname + ")", conf)
+        println("AAAAA")
         val unpartitionedGraph = GraphLoader.edgeListFile(sc, fname,
           minEdgePartitions = numEPart).cache()
+        println("BBBBB")
         val graph = partitionStrategy.foldLeft(unpartitionedGraph)(_.partitionBy(_))
+        println("BBBBB")
+
 
         val cc = ConnectedComponents.run(graph)
         println("Components: " + cc.vertices.map{ case (vid,data) => data}.distinct())
