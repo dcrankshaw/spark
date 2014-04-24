@@ -28,7 +28,11 @@ import org.apache.hadoop.hive.serde2.objectinspector._
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.JavaHiveDecimalObjectInspector
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.JavaHiveVarcharObjectInspector
 import org.apache.hadoop.io.Writable
-import org.apache.hadoop.mapred._
+import org.apache.hadoop.mapred.JobConf
+import org.apache.hadoop.mapred.FileOutputFormat
+import org.apache.hadoop.mapred.FileOutputCommitter
+// import org.apache.hadoop.mapred._
+// import org.apache.hadoop.mapred._
 
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.rdd.RDD
