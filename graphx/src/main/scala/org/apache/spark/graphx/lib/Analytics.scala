@@ -57,7 +57,7 @@ object Analytics extends Logging {
     taskType match {
       case "pagerank" =>
         var tol: Float = 0.001F
-        var numIters: Int = 10
+        // var numIters: Int = 10
         var outFname = ""
         var numEPart = 4
         var partitionStrategy: Option[PartitionStrategy] = None
@@ -66,7 +66,7 @@ object Analytics extends Logging {
 
         options.foreach{
           case ("tol", v) => tol = v.toFloat
-          case ("numIters", v) => numIters = v.toInt
+          // case ("numIters", v) => numIters = v.toInt
           case ("output", v) => outFname = v
           case ("numEPart", v) => numEPart = v.toInt
           case ("partStrategy", v) => partitionStrategy = Some(pickPartitioner(v))
