@@ -26,6 +26,7 @@ import org.apache.spark.mllib.classification.{LogisticRegressionWithLBFGS, SVMWi
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.mllib.optimization.{SquaredL2Updater, L1Updater}
+import org.apache.spark.rdd.RDD
 import breeze.stats.distributions.{Gaussian, Uniform}
 import breeze.linalg.DenseMatrix
 
@@ -132,10 +133,9 @@ object MnistSVMs {
     // val broadcastB = sc.broadcast(bMatrix)
 
     def featurizePartition(part: Iterator[(Double, Array[Double])])
-      : (DenseMatrix[Double], DenseMatrix[Double]) = {
-      val rowMats = part.map({case (label, vals) => new DenseMatrix(1, vals, 0)})
-        .toList
-      val mat = DenseMatrix.vertcat[Double](rawMats:_*)
+      : Iterator[(DenseMatrix[Double], DenseMatrix[Double])] = {
+      val rowMats = part.map({case (label, vals) => new DenseMatrix(1, vals, 0)}).toList
+      val mat = DenseMatrix.vertcat[Double](rowMats:_*)
       // if (mat.cols != d) { throw new Exception("got matrix size wrong") }
       val features = (mat * broadcastW.value.t)
         .mapValues(v => scala.math.max(v, 0))
@@ -147,22 +147,24 @@ object MnistSVMs {
       var i = 0
       // for ((x, i) <- part.zipWithIndex
       part.foreach({ case (l, _) => {
-          labels(i, l) = 1.0
+          labels(i, l.toInt) = 1.0
           i += 1
         }
       })
-      (labels, featuresPlus)
+      Iterator((labels, featuresPlus))
     }
 
     val featureLabels = parsedData.mapPartitions(featurizePartition)
 
     val ftf = featureLabels.map({case(labels, features) => {
-      features.t * features
-    }.reduce(_ + _)
+        features.t * features
+      }
+    }).reduce(_ + _)
 
     val fty = featureLabels.map({case(labels, features) => {
-      features.t * labels
-    }.reduce(_ + _)
+        features.t * labels
+      }
+    }).reduce(_ + _)
 
     // linear solve
     val coeffMatrix = ftf \ fty
