@@ -177,8 +177,8 @@
     -->
     <spark.test.home>${session.executionRootDirectory}</spark.test.home>
 
-    <PermGen>512m</PermGen>
-    <MaxPermGen>7000m</MaxPermGen>
+    <PermGen>1024m</PermGen>
+    <MaxPermGen>20000m</MaxPermGen>
     <CodeCacheSize>2000m</CodeCacheSize>
   </properties>
 
